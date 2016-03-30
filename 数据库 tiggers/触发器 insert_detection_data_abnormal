@@ -1,0 +1,453 @@
+--具体detection的意义 请看NO1.Readme 开发之前一定要先阅读！！.txt
+
+--判断盖触发器是否存在
+if Exists(select name from sysobjects where name='insert_detection_data_abnormal' and xtype='TR')
+begin 
+	drop trigger [insert_detection_data_abnormal]
+end
+go
+
+
+--水质异常触发器
+CREATE TRIGGER [insert_detection_data_abnormal]
+   ON  [dbo].[detection_data] 
+   AFTER INSERT
+AS 
+BEGIN
+	SET NOCOUNT ON;
+	--------------------------------------------
+	---------------模块一，用于过滤异常的数值-------------------
+	--------------------------------------------
+	--声明变量
+	declare @sewageid bigint,@testtime datetime,
+	@detection1 real,@detection2 real,@detection3 real,@detection4 real,@detection5 real,
+	@detection6 real,@detection7 real,@detection8 real,@detection9 real,@detection10 real,
+	@detection11 real,@detection12 real,
+	@detection13 real,@detection14 real
+	
+	--上下限
+	declare @detection1ul real,@detection1dl real,@detection2ul real,@detection2dl real
+	declare @detection3ul real,@detection3dl real,@detection4ul real,@detection4dl real
+	declare @detection5ul real,@detection5dl real,@detection6ul real,@detection6dl real
+	
+	declare @detection10ul real,@detection10dl real,@detection11ul real,@detection11dl real
+	declare @detection12ul real,@detection12dl real,@detection13ul real,@detection13dl real
+	declare @detection14ul real,@detection14dl real
+	
+	
+	--从刚刚插入的数据中获取数据
+	select @sewageid=sewageID,@testtime=testingtime,
+	@detection1=detection1,@detection2=detection2,
+	@detection3=detection3,@detection4=detection4,@detection5=detection5,
+	@detection6=detection6,@detection7=detection7,@detection8=detection8,
+	@detection9=detection9,
+	@detection10=detection10,@detection11=detection11,
+	@detection12=detection12,@detection13=detection13,
+	@detection14=detection14 from inserted
+	
+	--从sewage表中选择出上下限
+	select   
+	@detection1ul=detection1UL,@detection1dl=detection1DL,
+	@detection2ul=detection2UL,@detection2dl=detection2DL,
+    @detection3ul=detection3UL,@detection3dl=detection3DL,
+    @detection5ul=detection5UL,@detection5dl=detection5DL,
+	@detection6ul=detection6UL,@detection6dl=detection6DL,
+	
+	@detection10ul=detection10UL,@detection10dl=detection10DL,
+	@detection11ul=detection11UL,@detection11dl=detection11DL,
+	@detection12ul=detection12UL,@detection12dl=detection12DL,
+	@detection13ul=detection13UL,@detection13dl=detection13DL,
+	@detection14ul=detection14UL,@detection14dl=detection14DL
+    from  sewage where sewageID=@sewageid
+	
+	
+	--当天是否有数据
+	if  (@detection1 < @detection1dl or @detection1 > @detection1ul)
+		if not exists(select * from detection_data_abnormal where sewageID = @sewageID and detectionno = 1 and CONVERT(varchar(11),testingtime,111) = CONVERT(varchar(11),GETDATE() ,111) )
+		begin
+			insert into detection_data_abnormal(sewageID,testingtime,detectionnum,detectionno)
+			values(@sewageid,@testtime,@detection1,1)
+		end
+	------------------------------------
+	if  (@detection2 < @detection2dl or @detection2 > @detection2ul)
+		if not exists(select * from detection_data_abnormal where sewageID = @sewageID and detectionno = 2 and CONVERT(varchar(11),testingtime,111) = CONVERT(varchar(11),GETDATE() ,111) )
+		begin
+			insert into detection_data_abnormal(sewageID,testingtime,detectionnum,detectionno)
+			values(@sewageid,@testtime,@detection2,2)
+		end
+	----------------------------------------
+	if  (@detection3 < @detection3dl or @detection3 > @detection3ul)
+		if not exists(select * from detection_data_abnormal where sewageID = @sewageID and detectionno = 3 and CONVERT(varchar(11),testingtime,111) = CONVERT(varchar(11),GETDATE() ,111) )
+		begin
+			insert into detection_data_abnormal(sewageID,testingtime,detectionnum,detectionno)
+			values(@sewageid,@testtime,@detection3,3)
+		end
+	---------------------------------------
+	if  (@detection4 < @detection4dl or @detection4 > @detection4ul)
+		if not exists(select * from detection_data_abnormal where sewageID = @sewageID and detectionno = 4 and CONVERT(varchar(11),testingtime,111) = CONVERT(varchar(11),GETDATE() ,111) )
+		begin
+			insert into detection_data_abnormal(sewageID,testingtime,detectionnum,detectionno)
+			values(@sewageid,@testtime,@detection4,4)
+		end
+	---------------------------------------
+	if  (@detection5 < @detection5dl or @detection5 > @detection5ul)
+		if not exists(select * from detection_data_abnormal where sewageID = @sewageID and detectionno = 5 and CONVERT(varchar(11),testingtime,111) = CONVERT(varchar(11),GETDATE() ,111) )
+		begin
+			insert into detection_data_abnormal(sewageID,testingtime,detectionnum,detectionno)
+			values(@sewageid,@testtime,@detection5,5)
+		end
+	---------------------------------------
+	if  (@detection10 < @detection10dl or @detection10 > @detection10ul)
+		if not exists(select * from detection_data_abnormal where sewageID = @sewageID and detectionno = 10 and CONVERT(varchar(11),testingtime,111) = CONVERT(varchar(11),GETDATE() ,111) )
+		begin
+			insert into detection_data_abnormal(sewageID,testingtime,detectionnum,detectionno)
+			values(@sewageid,@testtime,@detection10,10)
+		end
+	---------------------------------------
+	if  (@detection11 < @detection11dl or @detection11 > @detection11ul)
+		if not exists(select * from detection_data_abnormal where sewageID = @sewageID and detectionno = 11 and CONVERT(varchar(11),testingtime,111) = CONVERT(varchar(11),GETDATE() ,111) )
+		begin
+			insert into detection_data_abnormal(sewageID,testingtime,detectionnum,detectionno)
+			values(@sewageid,@testtime,@detection11,11)
+		end
+	---------------------------------------
+	if  (@detection12 < @detection12dl or @detection12 > @detection12ul)
+		if not exists(select * from detection_data_abnormal where sewageID = @sewageID and detectionno = 12 and CONVERT(varchar(11),testingtime,111) = CONVERT(varchar(11),GETDATE() ,111) )
+		begin
+			insert into detection_data_abnormal(sewageID,testingtime,detectionnum,detectionno)
+			values(@sewageid,@testtime,@detection12,12)
+		end
+	---------------------------------------
+	if  (@detection13 < @detection13dl or @detection13 > @detection13ul)
+		if not exists(select * from detection_data_abnormal where sewageID = @sewageID and detectionno = 13 and CONVERT(varchar(11),testingtime,111) = CONVERT(varchar(11),GETDATE() ,111) )
+		begin
+			insert into detection_data_abnormal(sewageID,testingtime,detectionnum,detectionno)
+			values(@sewageid,@testtime,@detection13,13)
+		end
+	---------------------------------------
+	if  (@detection14 < @detection14dl or @detection14 > @detection14ul)
+		if not exists(select * from detection_data_abnormal where sewageID = @sewageID and detectionno = 14 and CONVERT(varchar(11),testingtime,111) = CONVERT(varchar(11),GETDATE() ,111) )
+		begin
+			insert into detection_data_abnormal(sewageID,testingtime,detectionnum,detectionno)
+			values(@sewageid,@testtime,@detection14,14)
+		end
+	---------------------------------------
+		
+	--------------------------------------------
+	-----------------以上是模块一---------------
+	-----------------以下是模块二，用于统计每天得运行时间，每个侦测值得最大最小值以及平均值---------------
+	--------------------------------------------
+	--这里为statistic_day表中插入数据 每插入一条数据就执行一次
+	--statistic_day表中存放的是 每个站点每天的统计数据
+	
+	--当天的不存在,先进行初始化,并插入数据
+	if not exists (SELECT * from statistic_day where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),getdate(),120)) 
+		begin
+			insert into statistic_day(sewageid,testingtime,
+			detection1avg,detection1min,detection1max,detection2avg,detection2min,detection2max,detection3avg,detection3min,detection3max,detection4avg,detection4min,detection4max,detection5avg,detection5min,detection5max,
+			detection6avg,detection6min,detection6max,detection7avg,detection7min,detection7max,detection8avg,detection8min,detection8max,detection9avg,detection9min,detection9max,detection10avg,detection10min,detection10max,
+			detection11avg,detection11min,detection11max,detection12avg,detection12min,detection12max,detection13avg,detection13min,detection13max,detection14avg,detection14min,detection14max)
+			 values(@sewageid,convert(datetime,CONVERT(varchar(11),@testtime,120)+'00:00:00',120),
+			 @detection1,@detection1,@detection1,@detection2,@detection2,@detection2,@detection3,@detection3,@detection3,@detection4,@detection4,@detection4,@detection5,@detection5,@detection5,
+			 @detection6,@detection6,@detection6,@detection7,@detection7,@detection7,@detection8,@detection8,@detection8,@detection9,@detection9,@detection9,@detection10,@detection10,@detection10,
+			 @detection11,@detection11,@detection11,@detection12,@detection12,@detection12,@detection13,@detection13,@detection13,@detection14,@detection14,@detection14)
+		end
+	else 
+		begin
+			declare @detection1avg float,@detection1min float,@detection1max float
+			declare @detection2avg float,@detection2min float,@detection2max float
+			declare @detection3avg float,@detection3min float,@detection3max float
+			declare @detection4avg float,@detection4min float,@detection4max float
+			declare @detection5avg float,@detection5min float,@detection5max float
+			
+			declare @detection6avg float,@detection6min float,@detection6max float
+			declare @detection7avg float,@detection7min float,@detection7max float
+			declare @detection8avg float,@detection8min float,@detection8max float
+			declare @detection9avg float,@detection9min float,@detection9max float
+			declare @detection10avg float,@detection10min float,@detection10max float
+			declare @detection11avg float,@detection11min float,@detection11max float
+			declare @detection12avg float,@detection12min float,@detection12max float
+			declare @detection13avg float,@detection13min float,@detection13max float
+			declare @detection14avg float,@detection14min float,@detection14max float
+			
+			
+			select 
+			@detection1avg=detection1avg,@detection1min=detection1min,@detection1max=detection1max,
+			@detection2avg=detection2avg,@detection2min=detection2min,@detection2max=detection2max,
+			@detection3avg=detection3avg,@detection3min=detection3min,@detection3max=detection3max,
+			@detection4avg=detection4avg,@detection4min=detection4min,@detection4max=detection4max,
+			@detection5avg=detection5avg,@detection5min=detection5min,@detection5max=detection5max,
+			
+			@detection6avg=detection6avg,@detection6min=detection6min,@detection6max=detection6max,
+			@detection7avg=detection7avg,@detection7min=detection7min,@detection7max=detection7max,
+			@detection8avg=detection8avg,@detection8min=detection8min,@detection8max=detection8max,
+			@detection9avg=detection9avg,@detection9min=detection9min,@detection9max=detection9max,
+			@detection10avg=detection10avg,@detection10min=detection10min,@detection10max=detection10max,
+			@detection11avg=detection11avg,@detection11min=detection11min,@detection11max=detection11max,
+			@detection12avg=detection12avg,@detection12min=detection12min,@detection12max=detection12max,
+			@detection13avg=detection13avg,@detection13min=detection13min,@detection13max=detection13max,
+			@detection14avg=detection14avg,@detection14min=detection14min,@detection14max=detection14max
+			from statistic_day
+			where convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+			
+			
+			
+			--以下字段说明，如果该字段为null 那么说明是第一次插入， 要进行初始化。
+			if @detection1avg is null
+				begin
+					set @detection1avg = @detection1
+					set @detection1min = @detection1
+					set @detection1max = @detection1
+				end
+			if @detection2avg is null
+				begin
+					set @detection2avg = @detection2
+					set @detection2min = @detection2
+					set @detection2max = @detection2
+				end
+			if @detection3avg is null
+				begin
+					set @detection3avg = @detection3
+					set @detection3min = @detection3
+					set @detection3max = @detection3
+				end
+			if @detection4avg is null
+				begin
+					set @detection4avg = @detection4
+					set @detection4min = @detection4
+					set @detection4max = @detection4
+				end
+				
+			if @detection5avg is null
+				begin
+					set @detection5avg = @detection5
+					set @detection5min = @detection5
+					set @detection5max = @detection5
+				end
+			if @detection6avg is null
+				begin
+					set @detection6avg = @detection6
+					set @detection6min = @detection6
+					set @detection6max = @detection6
+				end
+			if @detection7avg is null
+				begin
+					set @detection7avg = @detection7
+					set @detection7min = @detection7
+					set @detection7max = @detection7
+				end
+			if @detection8avg is null
+				begin
+					set @detection8avg = @detection8
+					set @detection8min = @detection8
+					set @detection8max = @detection8
+				end
+			if @detection9avg is null
+				begin
+					set @detection9avg = @detection9
+					set @detection9min = @detection9
+					set @detection9max = @detection9
+				end
+			if @detection10avg is null
+				begin
+					set @detection10avg = @detection10
+					set @detection10min = @detection10
+					set @detection10max = @detection10
+				end
+			if @detection11avg is null
+				begin
+					set @detection11avg = @detection11
+					set @detection11min = @detection11
+					set @detection11max = @detection11
+				end
+			if @detection12avg is null
+				begin
+					set @detection12avg = @detection12
+					set @detection12min = @detection12
+					set @detection12max = @detection12
+				end
+			if @detection13avg is null
+				begin
+					set @detection13avg = @detection13
+					set @detection13min = @detection13
+					set @detection13max = @detection13
+				end
+			if @detection14avg is null
+				begin
+					set @detection14avg = @detection14
+					set @detection14min = @detection14
+					set @detection14max = @detection14
+				end
+
+			
+			--如果当前的值比最小的小
+			if @detection1 < @detection1min
+				set @detection1min = @detection1
+			if @detection2 < @detection2min
+				set @detection2min = @detection2
+			if @detection3 < @detection3min
+				set @detection3min = @detection3
+			if @detection4 < @detection4min
+				set @detection4min = @detection4
+			if @detection5 < @detection5min
+				set @detection5min = @detection5
+			if @detection6 < @detection6min
+				set @detection6min = @detection6
+			if @detection7 < @detection7min
+				set @detection7min = @detection7
+			if @detection8 < @detection8min
+				set @detection8min = @detection8
+			if @detection9 < @detection9min
+				set @detection9min = @detection9
+			if @detection10 < @detection10min
+				set @detection10min = @detection10
+			if @detection11 < @detection11min
+				set @detection11min = @detection11
+			if @detection12 < @detection12min
+				set @detection12min = @detection12
+			if @detection13 < @detection13min
+				set @detection13min = @detection13
+			if @detection14 < @detection14min
+				set @detection14min = @detection14
+			
+			--如果当前的值比最大的大
+			if @detection1 > @detection1max
+				set @detection1max = @detection1
+			if @detection2 > @detection2max
+				set @detection2max = @detection2
+			if @detection3 > @detection3max
+				set @detection3max = @detection3
+			if @detection4 > @detection4max
+				set @detection4max = @detection4
+			if @detection5 > @detection5max
+				set @detection5max = @detection5
+			if @detection6 > @detection6max
+				set @detection6max = @detection6
+			if @detection7 > @detection7max
+				set @detection7max = @detection7
+			if @detection8 > @detection8max
+				set @detection8max = @detection8
+			if @detection9 > @detection9max
+				set @detection9max = @detection9
+			if @detection10 > @detection10max
+				set @detection10max = @detection10
+			if @detection11 > @detection11max
+				set @detection11max = @detection11
+			if @detection12 > @detection12max
+				set @detection12max = @detection12
+			if @detection13 > @detection13max
+				set @detection13max = @detection13
+			if @detection14 > @detection14max
+				set @detection14max = @detection14
+			
+			--算平均
+			declare @count int
+		
+			--获取当天所有的detection_data量
+			select @count=count(*) from detection_data where convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+			
+			set @detection1avg = (@detection1avg*(@count-1)+@detection1)/@count
+			set @detection2avg = (@detection2avg*(@count-1)+@detection2)/@count
+			set @detection3avg = (@detection3avg*(@count-1)+@detection3)/@count
+			set @detection5avg = (@detection5avg*(@count-1)+@detection5)/@count
+			set @detection6avg = (@detection6avg*(@count-1)+@detection6)/@count
+			set @detection7avg = (@detection7avg*(@count-1)+@detection7)/@count
+			set @detection8avg = (@detection8avg*(@count-1)+@detection8)/@count
+			set @detection9avg = (@detection9avg*(@count-1)+@detection9)/@count
+			set @detection10avg = (@detection10avg*(@count-1)+@detection10)/@count
+			set @detection11avg = (@detection11avg*(@count-1)+@detection11)/@count
+			set @detection12avg = (@detection12avg*(@count-1)+@detection12)/@count
+			set @detection13avg = (@detection13avg*(@count-1)+@detection13)/@count
+			set @detection14avg = (@detection14avg*(@count-1)+@detection14)/@count
+			
+			
+		
+			update dbo.statistic_day set 
+				detection1avg = @detection1avg,
+				detection1min = @detection1min,
+				detection1max = @detection1max,
+				detection2avg = @detection2avg,
+				detection2min = @detection2min,
+				detection2max = @detection2max,
+				detection3avg = @detection3avg,
+				detection3min = @detection3min,
+				detection3max = @detection3max,
+				
+				detection4avg = @detection4avg,
+				detection4min = @detection4min,
+				detection4max = @detection4max,
+				
+				detection5avg = @detection5avg,
+				detection5min = @detection5min,
+				detection5max = @detection5max,
+				
+				detection6avg=@detection6avg,
+				detection6min=@detection6min,
+				detection6max=@detection6max,
+				detection7avg=@detection7avg,
+				detection7min=@detection7min,
+				detection7max=@detection7max,
+				detection8avg=@detection8avg,
+				detection8min=@detection8min,
+				detection8max=@detection8max,
+				detection9avg=@detection9avg,
+				detection9min=@detection9min,
+				detection9max=@detection9max,
+				detection10avg=@detection10avg,
+				detection10min=@detection10min,
+				detection10max=@detection10max,
+				detection11avg=@detection11avg,
+				detection11min=@detection11min,
+				detection11max=@detection11max,
+				detection12avg=@detection12avg,
+				detection12min=@detection12min,
+				detection12max=@detection12max,
+				detection13avg=@detection13avg,
+				detection13min=@detection13min,
+				detection13max=@detection13max,
+				detection14avg=@detection14avg,
+				detection14min=@detection14min,
+				detection14max=@detection14max
+				
+				where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+			
+		end
+	--------------------------------------------
+	---------------模块二结束-------------------
+	--------------------------------------------
+
+	---------------模块三开始-------------------
+	---------------用于统计插入statistic表 每小时水量求和------
+	--------------------------------------------
+
+	--将getdate()设置成@testtime 表明是插入这个数据时所在的小时
+	if not exists (SELECT * from statistic where sewageID=@sewageid and convert(varchar(13),testingtime,120) = convert(varchar(13),@testtime,120))
+	--没有就初始化 
+		begin
+			insert into statistic(sewageid,testingtime,waterflow)
+			 values(@sewageid,convert(datetime,CONVERT(varchar(13),@testtime,120)+':00:00',120),@detection6)
+		end
+	else 
+		begin
+			declare @waterflow float
+			
+			select @waterflow = waterflow from statistic where sewageID=@sewageid and convert(varchar(13),testingtime,120) = convert(varchar(13),@testtime,120)
+			
+			set @waterflow = @waterflow + @detection6
+			
+			update statistic set waterflow = @waterflow where sewageID=@sewageid and convert(varchar(13),testingtime,120) = convert(varchar(13),@testtime,120)
+		end
+	--------------------------------------------
+	---------------模块三结束-------------------
+	--------------------------------------------
+
+END
+--测试1，run_data中先插入数据，此时会statistic_day表中会进行初始化 最好初始化为null
+--在后续插入detection_data时，如果已经
+
+--测试2，detection_data中先插入数据，最大最小值均值 都是一样没有关系
+
+
+
+
+

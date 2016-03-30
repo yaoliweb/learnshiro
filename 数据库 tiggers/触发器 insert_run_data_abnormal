@@ -1,0 +1,272 @@
+--判断盖触发器是否存在
+if Exists(select name from sysobjects where name='insert_run_data_abnormal' and xtype='TR')
+begin 
+	drop trigger [insert_run_data_abnormal]
+end
+go
+
+
+--设备异常触发器
+CREATE TRIGGER [insert_run_data_abnormal] 
+   ON  [dbo].[run_data] 
+   AFTER INSERT
+AS 
+BEGIN
+	SET NOCOUNT ON;
+
+	declare @sewageid bigint,@testtime datetime,@state1 int,@state2 int,@state3 int,@state4 int,@state5 int
+	declare @state6 int,@state7 int,@state8 int,@state9 int,@state10 int
+	declare @state11 int,@state12 int,@state13 int,@state14 int,@state15 int
+	declare @state16 int,@state17 int,@state18 int,@state19 int,@state20 int,@state21 int
+	
+	
+	--记录今天是否有记录
+	--declare @hasRecordTodayTime datetime
+	
+	select 
+	@sewageid=sewageID,@testtime=testingtime,
+	@state6=equipment6state,@state7=equipment7state,@state8=equipment8state,@state9=equipment9state,@state10=equipment10state,
+	@state11=equipment11state,@state12=equipment12state,@state13=equipment13state,@state14=equipment14state,@state15=equipment15state,
+	@state16=equipment16state,@state17=equipment17state,@state18=equipment18state,@state19=equipment19state,@state20=equipment20state,@state21=equipment21state
+	from inserted
+	
+	--------------------------------------------
+	-------下面是分类器，只要有异常就分类。没有state1 到 state5
+	--------------------------------------------
+	
+	--state6的液位HH
+	if @state6=8
+		if not exists(select * from run_data_abnormal where sewageID = @sewageID and equipmentno = 6 and CONVERT(varchar(12),testingtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.run_data_abnormal(sewageid,testingtime,equipmentstate,equipmentno,isrepaired) values(@sewageid,@testtime,@state6,6,0)
+		end
+	--state6的液位为LL
+	if @state6=1
+		if not exists(select * from run_data_abnormal where sewageID = @sewageID and equipmentno = 6 and CONVERT(varchar(12),testingtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.run_data_abnormal(sewageid,testingtime,equipmentstate,equipmentno,isrepaired) values(@sewageid,@testtime,@state6,6,0)
+		end
+	--state7的液位HH
+	if @state7=8
+		if not exists(select * from run_data_abnormal where sewageID = @sewageID and equipmentno = 7 and CONVERT(varchar(12),testingtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.run_data_abnormal(sewageid,testingtime,equipmentstate,equipmentno,isrepaired) values(@sewageid,@testtime,@state7,7,0)
+		end
+	--state7的液位LL
+	if @state7=1
+		if not exists(select * from run_data_abnormal where sewageID = @sewageID and equipmentno = 7 and CONVERT(varchar(12),testingtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.run_data_abnormal(sewageid,testingtime,equipmentstate,equipmentno,isrepaired) values(@sewageid,@testtime,@state7,7,0)
+		end
+		
+
+	if @state8=3
+		if not exists(select * from run_data_abnormal where sewageID = @sewageID and equipmentno = 8 and CONVERT(varchar(12),testingtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.run_data_abnormal(sewageid,testingtime,equipmentstate,equipmentno,isrepaired) values(@sewageid,@testtime,@state8,8,0)
+		end
+	if @state9=3
+		if not exists(select * from run_data_abnormal where sewageID = @sewageID and equipmentno = 9 and CONVERT(varchar(12),testingtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.run_data_abnormal(sewageid,testingtime,equipmentstate,equipmentno,isrepaired) values(@sewageid,@testtime,@state9,9,0)
+		end
+	if @state10=3
+		if not exists(select * from run_data_abnormal where sewageID = @sewageID and equipmentno = 10 and CONVERT(varchar(12),testingtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.run_data_abnormal(sewageid,testingtime,equipmentstate,equipmentno,isrepaired) values(@sewageid,@testtime,@state10,10,0)
+		end
+	if @state11=3
+		if not exists(select * from run_data_abnormal where sewageID = @sewageID and equipmentno = 11 and CONVERT(varchar(12),testingtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.run_data_abnormal(sewageid,testingtime,equipmentstate,equipmentno,isrepaired) values(@sewageid,@testtime,@state11,11,0)
+		end
+	if @state12=3
+		if not exists(select * from run_data_abnormal where sewageID = @sewageID and equipmentno = 12 and CONVERT(varchar(12),testingtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.run_data_abnormal(sewageid,testingtime,equipmentstate,equipmentno,isrepaired) values(@sewageid,@testtime,@state12,12,0)
+		end
+	if @state13=3
+		if not exists(select * from run_data_abnormal where sewageID = @sewageID and equipmentno = 13 and CONVERT(varchar(12),testingtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.run_data_abnormal(sewageid,testingtime,equipmentstate,equipmentno,isrepaired) values(@sewageid,@testtime,@state13,13,0)
+		end
+	if @state14=3
+		if not exists(select * from run_data_abnormal where sewageID = @sewageID and equipmentno = 14 and CONVERT(varchar(12),testingtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.run_data_abnormal(sewageid,testingtime,equipmentstate,equipmentno,isrepaired) values(@sewageid,@testtime,@state14,14,0)
+		end
+	if @state15=3
+		if not exists(select * from run_data_abnormal where sewageID = @sewageID and equipmentno = 15 and CONVERT(varchar(12),testingtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.run_data_abnormal(sewageid,testingtime,equipmentstate,equipmentno,isrepaired) values(@sewageid,@testtime,@state15,15,0)
+		end
+	if @state16=3
+		if not exists(select * from run_data_abnormal where sewageID = @sewageID and equipmentno = 16 and CONVERT(varchar(12),testingtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.run_data_abnormal(sewageid,testingtime,equipmentstate,equipmentno,isrepaired) values(@sewageid,@testtime,@state16,16,0)
+		end
+	if @state17=3
+		if not exists(select * from run_data_abnormal where sewageID = @sewageID and equipmentno = 17 and CONVERT(varchar(12),testingtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.run_data_abnormal(sewageid,testingtime,equipmentstate,equipmentno,isrepaired) values(@sewageid,@testtime,@state17,17,0)
+		end
+	if @state18=3
+		if not exists(select * from run_data_abnormal where sewageID = @sewageID and equipmentno = 18 and CONVERT(varchar(12),testingtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.run_data_abnormal(sewageid,testingtime,equipmentstate,equipmentno,isrepaired) values(@sewageid,@testtime,@state18,18,0)
+		end
+	--------------------------------------------
+	--------------------------------------------
+	--------------------------------------------
+
+	--这里为statistic_day表中插入数据 每插入一条数据就执行一次
+	--statistic_day表中存放的是 每个站点每天的统计数据
+
+	--@time 与上次的分钟时间差
+	DECLARE @pretesttime datetime,@time real
+	
+	--获取当天最大的日期数据
+	select @pretesttime=testingtime from dbo.run_data where 
+		sewageID=@sewageid and 
+		testingtime<@testtime and
+		convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+	
+	--如果之前的那一条数据不存在，说明这条数据是当天的第一条数据,否则计算当前数据与之前的最新的时间分钟之差
+	if @pretesttime is null
+		begin
+			set @time = datediff(n,convert(datetime,CONVERT(varchar(11),@testtime,120)+'00:00:00',120),@testtime)
+		end
+	else 	
+		begin
+			set @time = datediff(n,@pretesttime,@testtime)
+		end
+	
+	--当天的不存在,先进行初始化
+	if not exists (SELECT * from statistic_day where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),getdate(),120)) 
+		begin
+			insert into statistic_day(sewageid,testingtime) values(@sewageid,convert(datetime,CONVERT(varchar(11),@testtime,120)+'00:00:00',120))
+		end
+	
+	
+	--
+	--设备1 状态为1 运行状态
+	--if @state1 = 1 
+	--	begin
+	--		update dbo.statistic_day set equip1normaltime =equip1normaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+	--	end
+	--设备1状态为3 故障状态
+	--if @state1 = 3
+	--	begin
+	--		--异常 事件
+	--		update dbo.statistic_day set equip1abnormaltime =equip1abnormaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+	--	end 
+		
+		
+	if @state8 = 1 
+		begin
+			update dbo.statistic_day set equip8normaltime =equip8normaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state8 = 3
+		begin
+			update dbo.statistic_day set equip8abnormaltime =equip8abnormaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state9 = 1 
+		begin
+			update dbo.statistic_day set equip9normaltime =equip9normaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state9 = 3
+		begin
+			update dbo.statistic_day set equip9abnormaltime =equip9abnormaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state10 = 1 
+		begin
+			update dbo.statistic_day set equip10normaltime =equip10normaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state10 = 3
+		begin
+			update dbo.statistic_day set equip10abnormaltime =equip10abnormaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state11 = 1 
+		begin
+			update dbo.statistic_day set equip11normaltime =equip11normaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state11 = 3
+		begin
+			update dbo.statistic_day set equip11abnormaltime =equip11abnormaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state12 = 1 
+		begin
+			update dbo.statistic_day set equip12normaltime =equip12normaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state12 = 3
+		begin
+			update dbo.statistic_day set equip12abnormaltime =equip12abnormaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state13 = 1 
+		begin
+			update dbo.statistic_day set equip13normaltime =equip13normaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state13 = 3
+		begin
+			update dbo.statistic_day set equip13abnormaltime =equip13abnormaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state14 = 1 
+		begin
+			update dbo.statistic_day set equip14normaltime =equip14normaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state14 = 3
+		begin
+			update dbo.statistic_day set equip14abnormaltime =equip14abnormaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state15 = 1 
+		begin
+			update dbo.statistic_day set equip15normaltime =equip15normaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state15 = 3
+		begin
+			update dbo.statistic_day set equip15abnormaltime =equip15abnormaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state16 = 1 
+		begin
+			update dbo.statistic_day set equip16normaltime =equip16normaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state16 = 3
+		begin
+			update dbo.statistic_day set equip16abnormaltime =equip16abnormaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state17 = 1 
+		begin
+			update dbo.statistic_day set equip17normaltime =equip17normaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state17 = 3
+		begin
+			update dbo.statistic_day set equip17abnormaltime =equip17abnormaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state18 = 1 
+		begin
+			update dbo.statistic_day set equip18normaltime =equip18normaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state18 = 3
+		begin
+			update dbo.statistic_day set equip18abnormaltime =equip18abnormaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	if @state19 = 1 
+		begin
+			update dbo.statistic_day set equip19normaltime =equip19normaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+
+	if @state20 = 1 
+		begin
+			update dbo.statistic_day set equip20normaltime =equip20normaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+
+	if @state21 = 1 
+		begin
+			update dbo.statistic_day set equip21normaltime =equip21normaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+
+
+	----------------------------------------------
+
+	----------------------------------------------
+END

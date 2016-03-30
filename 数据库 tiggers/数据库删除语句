@@ -1,0 +1,10 @@
+delete from detection_data
+delete from detection_data_abnormal
+
+delete from run_data
+delete from run_data_abnormal
+
+delete from statistic
+delete from statistic_day
+
+delete from message

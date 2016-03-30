@@ -1,0 +1,438 @@
+select * from detection_data,(select MAX(testingtime) as testingtime,sewageid from detection_data group by sewageID) as a 
+where detection_data.testingtime = a.testingtime and detection_data.sewageID = a.sewageID and  order by detection_data.sewageid
+
+
+--
+
+
+--设备异常触发器
+CREATE TRIGGER [insert_run_data_abnormal] 
+   ON  [dbo].[run_data] 
+   AFTER INSERT
+AS 
+BEGIN
+	SET NOCOUNT ON;
+
+	declare @sewageid bigint,@testtime datetime,@state1 int,@state2 int,@state3 int,@state4 int,@state5 int
+	
+	--记录今天是否有记录
+	--declare @hasRecordTodayTime datetime
+	
+	select @sewageid=sewageID,@testtime=testingtime,@state1=equipment1state,@state2=equipment2state,@state3=equipment3state,@state4=equipment4state,@state5=equipment5state from inserted
+	
+	--------------------------------------------
+	-------下面是分类器，只要有异常就分类
+	--------------------------------------------
+	
+	if @state1=3
+		if not exists(select * from run_data_abnormal where sewageID = @sewageID and equipmentno = 1 and CONVERT(varchar(12),@testtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.run_data_abnormal(sewageid,testingtime,equipmentstate,equipmentno,isrepaired) values(@sewageid,@testtime,@state1,1,0)
+		end
+	if @state2=3
+		if not exists(select * from run_data_abnormal where sewageID = @sewageID and equipmentno = 2 and CONVERT(varchar(12),@testtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.run_data_abnormal(sewageid,testingtime,equipmentstate,equipmentno,isrepaired) values(@sewageid,@testtime,@state1,2,0)
+		end
+	if @state3=3
+		if not exists(select * from run_data_abnormal where sewageID = @sewageID and equipmentno = 3 and CONVERT(varchar(12),@testtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.run_data_abnormal(sewageid,testingtime,equipmentstate,equipmentno,isrepaired) values(@sewageid,@testtime,@state1,3,0)
+		end
+	if @state4=3
+		if not exists(select * from run_data_abnormal where sewageID = @sewageID and equipmentno = 4 and CONVERT(varchar(12),@testtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.run_data_abnormal(sewageid,testingtime,equipmentstate,equipmentno,isrepaired) values(@sewageid,@testtime,@state1,4,0)
+		end
+	if @state5=3
+		if not exists(select * from run_data_abnormal where sewageID = @sewageID and equipmentno = 5 and CONVERT(varchar(12),@testtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.run_data_abnormal(sewageid,testingtime,equipmentstate,equipmentno,isrepaired) values(@sewageid,@testtime,@state1,5,0)
+		end
+		
+	--------------------------------------------
+	-------这里还需要添加其他的state6 7 8 9 等等
+	--------------------------------------------
+
+	--这里为statistic_day表中插入数据 每插入一条数据就执行一次
+	--statistic_day表中存放的是 每个站点每天的统计数据
+
+	--statistic_day
+	--@time 与上次的分钟时间差
+	DECLARE @pretesttime datetime,@time real
+	
+	--获取当天最大的日期数据
+	select @pretesttime=testingtime from dbo.run_data where 
+		sewageID=@sewageid and 
+		testingtime<@testtime and
+		convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+	
+	--如果之前的那一条数据不存在，说明这条数据是当天的第一条数据,否则计算当前数据与之前的最新的时间分钟之差
+	if @pretesttime is null
+		begin
+			set @time = datediff(n,convert(datetime,CONVERT(varchar(11),@testtime,120)+'00:00:00',120),@testtime)
+		end
+	else 	
+		begin
+			set @time = datediff(n,@pretesttime,@testtime)
+		end
+	
+	--当天的不存在,先进行初始化
+	if not exists (SELECT * from statistic_day where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),getdate(),120)) 
+		begin
+			insert into statistic_day(sewageid,testingtime) values(@sewageid,@testtime)
+		end
+	
+	--设备1 状态为1
+	if @state1 = 1 
+		begin
+			--
+			update dbo.statistic_day set equip1normaltime =equip1normaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end
+	--设备1状态为3
+	if @state1 = 3
+		begin
+			--异常 事件
+			update dbo.statistic_day set equip1abnormaltime =equip1abnormaltime + @time where sewageID=@sewageid and convert(varchar(11),testingtime,120) = convert(varchar(11),@testtime,120)
+		end 
+		
+
+END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CREATE TRIGGER [insert_detection_data_abnormal] 
+   ON  [dbo].[detection_data] 
+   AFTER INSERT
+AS 
+BEGIN
+	SET NOCOUNT ON;
+	--声明变量
+	declare @sewageid bigint,@testtime datetime,
+	@detection1 real,@detection2 real,@detection3 real,@detection4 real,@detection5 real,
+	@detection6 real,@detection7 real,@detection8 real,@detection9 real --,@detection10 real,
+	--@detection11 real,@detection12 real,
+	--@detection13 real,@detection14 real
+	
+	--上下限
+	declare @detection1ul real,@detection1dl real,@detection2ul real,@detection2dl real
+	declare @detection3ul real,@detection3dl real,@detection4ul real,@detection4dl real
+	declare @detection5ul real,@detection5dl real,@detection6ul real,@detection6dl real
+	
+	--declare @detection10ul real,@detection10dl real,@detection11ul real,@detection11dl real
+	--declare @detection12ul real,@detection12dl real,@detection13ul real,@detection13dl real
+	--declare @detection14ul real,@detection14dl real
+	
+	
+	--从刚刚插入的数据中获取数据
+	select @sewageid=sewageID,@testtime=testingtime,
+	@detection1=detection1,@detection2=detection2,
+	@detection3=detection3,@detection4=detection4,@detection5=detection5,
+	@detection6=detection6,@detection7=detection7,@detection8=detection8,
+	@detection9=detection9 from inserted
+	--@detection10=detection10,@detection10=detection11,
+	--@detection12=detection12,@detection13=detection13,
+	--@detection10=detection14 from inserted
+	
+	--从sewage表中选择出上下限
+	select   
+	@detection1ul=detection1UL,@detection1dl=detection1DL,
+	@detection2ul=detection2UL,@detection2dl=detection2DL,
+    @detection3ul=detection3UL,@detection3dl=detection3DL,
+    @detection5ul=detection5UL,@detection5dl=detection5DL,
+	@detection6ul=detection6UL,@detection6dl=detection6DL
+	from  sewage where sewageID=@sewageid
+	--@detection10ul=detection10UL,@detection10dl=detection10DL,
+	--@detection11ul=detection11UL,@detection11dl=detection11DL,
+	--@detection12ul=detection12UL,@detection12dl=detection12DL,
+	--@detection13ul=detection13UL,@detection13dl=detection13DL,
+	--@detection14ul=detection14UL,@detection14dl=detection14DL
+	
+
+	
+	--比较 是否符合水质异常 符合就插入abnormal表
+	--if  (@detection1 < @detection1dl or @detection1 > @detection1ul) or  
+	--	(@detection2 < @detection2dl or @detection2 > @detection2ul) or
+	--	(@detection3 < @detection3dl or @detection3 > @detection3ul) or  
+	--	(@detection4 < @detection4dl or @detection4 > @detection4ul) or
+	--	(@detection5 < @detection5dl or @detection5 > @detection5ul)
+		
+		--(@detection10 < @detection10dl or @detection10 > @detection10ul) or
+		--(@detection11 < @detection11dl or @detection11 > @detection11ul) or
+		--(@detection12 < @detection12dl or @detection12 > @detection12ul) or
+		--(@detecti,,                                        ,,,,,,,,,,,, ,mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm,.on13 < @detection13dl or @detection13 > @detection13ul) or
+		--(@detection14 < @detection14dl or @detection14 > @detection14ul)
+	--begin
+		--插入数据
+	if (@detection1 < @detection1dl or @detection1 > @detection1ul)
+		if not exists(select * from detection_data_abnormal where sewageID = @sewageID and detectionno = 1 and CONVERT(varchar(12),@testtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.detection_data_abnormal(sewageid,testingtime,detectionnum,detectionno,isrepaired) values(@sewageid,@testtime,@detection1,1,0)
+		end
+	if (@detection2 < @detection2dl or @detection2 > @detection2ul)
+		if not exists(select * from detection_data_abnormal where sewageID = @sewageID and detectionno = 2 and CONVERT(varchar(12),@testtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.detection_data_abnormal(sewageid,testingtime,detectionnum,detectionno,isrepaired) values(@sewageid,@testtime,@detection2,2,0)
+		end
+	if (@detection3 < @detection3dl or @detection3 > @detection3ul)
+		if not exists(select * from detection_data_abnormal where sewageID = @sewageID and detectionno = 3 and CONVERT(varchar(12),@testtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.detection_data_abnormal(sewageid,testingtime,detectionnum,detectionno,isrepaired) values(@sewageid,@testtime,@detection3,3,0)
+		end
+	if (@detection4 < @detection4dl or @detection4 > @detection4ul)
+		if not exists(select * from detection_data_abnormal where sewageID = @sewageID and detectionno = 4 and CONVERT(varchar(12),@testtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.detection_data_abnormal(sewageid,testingtime,detectionnum,detectionno,isrepaired) values(@sewageid,@testtime,@detection4,4,0)
+		end
+	if (@detection5 < @detection5dl or @detection5 > @detection5ul)
+		if not exists(select * from detection_data_abnormal where sewageID = @sewageID and detectionno = 5 and CONVERT(varchar(12),@testtime,111) = CONVERT(varchar(12),GETDATE() ,111) )
+		begin
+			insert into dbo.detection_data_abnormal(sewageid,testingtime,detectionnum,detectionno,isrepaired) values(@sewageid,@testtime,@detection5,5,0)
+		end
+	--end
+END
+
+
+
+
+
+
+
+
+
+
+
+
+drop TRIGGER [insert_detection_data_abnormal];
+
+CREATE TRIGGER [insert_detection_data_abnormal] 
+   ON  [dbo].[detection_data] 
+   AFTER INSERT
+AS 
+BEGIN
+	SET NOCOUNT ON;
+	--声明变量
+	declare @sewageid bigint,@testtime datetime,
+	@detection1 real,@detection2 real,@detection3 real,@detection4 real,@detection5 real,
+	@detection6 real,@detection7 real,@detection8 real,@detection9 real,@detection10 real,
+	@detection11 real,@detection12 real,
+	@detection13 real,@detection14 real
+	
+	--上下限
+	declare @detection1ul real,@detection1dl real,@detection2ul real,@detection2dl real
+	declare @detection3ul real,@detection3dl real,@detection4ul real,@detection4dl real
+	declare @detection5ul real,@detection5dl real,@detection6ul real,@detection6dl real
+	
+	declare @detection10ul real,@detection10dl real,@detection11ul real,@detection11dl real
+	declare @detection12ul real,@detection12dl real,@detection13ul real,@detection13dl real
+	declare @detection14ul real,@detection14dl real
+	
+	
+	--从刚刚插入的数据中获取数据
+	select @sewageid=sewageID,@testtime=testingtime,
+	@detection1=detection1,@detection2=detection2,
+	@detection3=detection3,@detection4=detection4,@detection5=detection5,
+	@detection6=detection6,@detection7=detection7,@detection8=detection8,
+	@detection9=detection9,
+	@detection10=detection10,@detection10=detection11,
+	@detection12=detection12,@detection13=detection13,
+	@detection10=detection14 from inserted
+	
+	--从sewage表中选择出上下限
+	select   
+	@detection1ul=detection1UL,@detection1dl=detection1DL,
+	@detection2ul=detection2UL,@detection2dl=detection2DL,
+    @detection3ul=detection3UL,@detection3dl=detection3DL,
+    @detection5ul=detection5UL,@detection5dl=detection5DL,
+	@detection6ul=detection6UL,@detection6dl=detection6DL,
+	
+	@detection10ul=detection10UL,@detection10dl=detection10DL,
+	@detection11ul=detection11UL,@detection11dl=detection11DL,
+	@detection12ul=detection12UL,@detection12dl=detection12DL,
+	@detection13ul=detection13UL,@detection13dl=detection13DL,
+	@detection14ul=detection14UL,@detection14dl=detection14DL
+	
+    from  sewage where sewageID=@sewageid
+	
+	--比较 是否符合水质异常 符合就插入abnormal表
+	if  (@detection1 < @detection1dl or @detection1 > @detection1ul) or  
+		(@detection2 < @detection2dl or @detection2 > @detection2ul) or
+		(@detection3 < @detection3dl or @detection3 > @detection3ul) or  
+		(@detection4 < @detection4dl or @detection4 > @detection4ul) or
+		(@detection5 < @detection5dl or @detection5 > @detection5ul) or
+		
+		(@detection10 < @detection10dl or @detection10 > @detection10ul) or
+		(@detection11 < @detection11dl or @detection11 > @detection11ul) or
+		(@detection12 < @detection12dl or @detection12 > @detection12ul) or
+		(@detection13 < @detection13dl or @detection13 > @detection13ul) or
+		(@detection14 < @detection14dl or @detection14 > @detection14ul)
+	begin
+		--插入数据
+		insert into detection_data_abnormal(sewageID,testingtime,detection1,detection2,detection3,detection4,detection5,detection6,detection7,
+		detection8,detection9,detection10,detection11,detection12,detection13,detection14)
+		values(@sewageid,@testtime,@detection1,@detection2,@detection3,@detection4,@detection5,@detection6,@detection7,
+		@detection8,@detection9,@detection10,@detection11,@detection12,@detection13,@detection14)
+	end
+END
+
+
+
+
+USE [CS]
+GO
+
+/****** Object:  Table [dbo].[detection_data_abnormal]    Script Date: 02/10/2016 11:37:58 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[detection_data_abnormal](
+	[detectionID] [bigint] IDENTITY(1,1) NOT FOR REPLICATION NOT NULL,
+	[sewageID] [int] NULL,
+	[testingtime] [datetime] NULL,
+	[detection1] [numeric](18, 2) NULL,
+	[detection2] [numeric](18, 2) NULL,
+	[detection3] [numeric](18, 2) NULL,
+	[detection4] [numeric](18, 2) NULL,
+	[detection5] [numeric](18, 2) NULL,
+	[detection6] [numeric](18, 2) NULL,
+	[detection7] [numeric](18, 2) NULL,
+	[detection8] [numeric](18, 2) NULL,
+	[detection9] [numeric](18, 2) NULL,
+	[isrepaired] [int] NULL,
+ CONSTRAINT [PK_detection_data_abnormal] PRIMARY KEY CLUSTERED 
+(
+	[detectionID] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'0 表示没有被修复，1表示已经被修复，默认为0' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'detection_data_abnormal', @level2type=N'COLUMN',@level2name=N'isrepaired'
+GO
+
+ALTER TABLE [dbo].[detection_data_abnormal] ADD  CONSTRAINT [DF_detection_data_abnormal_isrepaired]  DEFAULT ((0)) FOR [isrepaired]
+GO
+
+
+USE [CS]
+GO
+
+/****** Object:  Table [dbo].[run_data_abnormal]    Script Date: 02/10/2016 11:38:05 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[run_data_abnormal](
+	[runID] [bigint] IDENTITY(1,1) NOT NULL,
+	[sewageID] [int] NULL,
+	[testingtime] [datetime] NULL,
+	[equipment1state] [tinyint] NULL,
+	[equipment2state] [tinyint] NULL,
+	[equipment3state] [tinyint] NULL,
+	[equipment4state] [tinyint] NULL,
+	[equipment5state] [tinyint] NULL,
+	[isrepaired] [tinyint] NULL,
+ CONSTRAINT [PK_run_data_abnormal] PRIMARY KEY CLUSTERED 
+(
+	[runID] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'0 表示没有被修复，1表示已经被修复，默认为0' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'run_data_abnormal', @level2type=N'COLUMN',@level2name=N'isrepaired'
+GO
+
+ALTER TABLE [dbo].[run_data_abnormal] ADD  CONSTRAINT [DF_run_data_abnormal_isrepaired]  DEFAULT ((0)) FOR [isrepaired]
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+实时监控，
+detection_data表
+datection_data_abnormal表
+sewage表 必须得获得
+
+
+
+
+
+先获取sewage表站点信息的数据 链接查询 detection_data表的数据（获得了站点信息+水质数据）
+获取detection_data_abnormal表中的数据
+循环detection_data_abnormal 设置sewage表中不正常的数据，然后设置
+
+
+
+
+
+
+
+
+			
+
+
+
+
+
+
+
+
+
+
+
+
+
+
